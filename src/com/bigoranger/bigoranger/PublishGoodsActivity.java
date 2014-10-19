@@ -39,6 +39,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	private static final int SELECT_IMAGE = 2;
 	private Button takePhoto, selectImage;
 
+	//ghhghth
 	private String picPath = ""; // 图片路径
 	public static String name; // 文件名称
 	public static String sdcardRoot; // sd卡根路径
