@@ -16,18 +16,19 @@ public class ImageAdapter extends BaseAdapter {
 	
 	private List<String> listPicPath;
 	//获取sd卡跟路径
-//	private String sdcardRoot= 
-//			Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator;
+	//private String sdcardRoot= 
+	//Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator;
 	private int minWidth;
 	public ImageAdapter(Context ctx,List<String> listPicPath,int minWidth){
 		this.ctx=ctx;
-		this.minWidth=(int) (minWidth-35)/4;;
+		this.minWidth=(int) (minWidth-35)/4;
 
 		this.listPicPath=listPicPath;
 		if(this.listPicPath==null){
 			this.listPicPath=new ArrayList<String>();
 		}
 	}
+	
 	@Override
 	public int getCount() {
 		return listPicPath.size();

@@ -12,7 +12,11 @@ import android.util.Log;
 
 public class Camera {
 
-	// 图片质量（占用内存大小）压缩
+	/**
+	 *  图片质量（占用内存大小）压缩
+	 * @param image
+	 * @return
+	 */
 	public static Bitmap compressImage(Bitmap image) {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -42,8 +46,48 @@ public class Camera {
 		return newBitmap;
 	}
 
-	// 按照指定height和width大小压缩图片 -- 尺寸
-	// @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
+	/**
+	 * 将图片等比例缩放
+	 * @param srcPath
+	 * @param widthPixels 手机原始分辨率的width
+	 * @param heightPixels 手机原始分辨率的height
+	 * @return
+	 */
+	public static Bitmap getimage(String srcPath,float widthPixels,float heightPixels) {
+		BitmapFactory.Options newOpts = new BitmapFactory.Options();
+
+		newOpts.inJustDecodeBounds = true;
+		Bitmap bitmap = BitmapFactory.decodeFile(srcPath,newOpts);
+		
+		newOpts.inJustDecodeBounds = false;
+		int w = newOpts.outWidth;
+		int h = newOpts.outHeight;
+		    
+		float hh = heightPixels;
+		float ww = widthPixels;
+		
+		int be = 1;
+		if (w > h && w > ww) {
+			be = (int)Math.ceil(newOpts.outWidth / ww);
+		} else if (w < h && h > hh) {
+			be = (int)Math.ceil(newOpts.outHeight / hh);
+		}
+		if (be <= 0)
+			be = 1;
+		newOpts.inSampleSize = be;
+		bitmap = BitmapFactory.decodeFile(srcPath, newOpts);
+		Log.v("width", bitmap.getWidth()+"");
+		Log.v("height", bitmap.getHeight()+"");
+		return bitmap;
+	}
+	
+	/**
+	 * 按照指定height和width大小压缩图片 -- 尺寸
+	 * @param bm
+	 * @param newWidth
+	 * @param newHeight
+	 * @return
+	 */
 	public static Bitmap scaleImg(Bitmap bm, int newWidth, int newHeight) {
 
 		// 获得图片的宽高
@@ -61,8 +105,6 @@ public class Camera {
 		// 得到新的图片
 		Bitmap newbm = Bitmap.createBitmap(bm, 0, 0, width, height, matrix,
 				true);
-		Log.v("width", newbm.getWidth() + "");
-		Log.v("height", newbm.getHeight() + "");
 		return newbm;
 
 	}
