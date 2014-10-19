@@ -1253,22 +1253,21 @@ containing a value of this type.
         /**  Description of a share target (both in the list of such or the default share button) in a ShareActionProvider (share UI). [CHAR LIMIT=NONE] 
          */
         public static final int abc_shareactionprovider_share_with_application=0x7f0a000b;
-        public static final int action_settings=0x7f0a000f;
-        public static final int address=0x7f0a0018;
+        public static final int action_settings=0x7f0a000e;
+        public static final int address=0x7f0a0017;
         public static final int app_name=0x7f0a000d;
-        public static final int back=0x7f0a001c;
-        public static final int category=0x7f0a0017;
-        public static final int costPrice=0x7f0a0015;
-        public static final int hello_world=0x7f0a000e;
-        public static final int presentation=0x7f0a0016;
-        public static final int price=0x7f0a0014;
-        public static final int save=0x7f0a001b;
-        public static final int select_Image=0x7f0a0011;
-        public static final int server=0x7f0a001a;
-        public static final int take_Photo=0x7f0a0010;
-        public static final int title=0x7f0a0013;
-        public static final int tradeWay=0x7f0a0019;
-        public static final int upload_Image=0x7f0a0012;
+        public static final int back=0x7f0a001b;
+        public static final int category=0x7f0a0016;
+        public static final int costPrice=0x7f0a0014;
+        public static final int presentation=0x7f0a0015;
+        public static final int price=0x7f0a0013;
+        public static final int save=0x7f0a001a;
+        public static final int select_Image=0x7f0a0010;
+        public static final int server=0x7f0a0019;
+        public static final int take_Photo=0x7f0a000f;
+        public static final int title=0x7f0a0012;
+        public static final int tradeWay=0x7f0a0018;
+        public static final int upload_Image=0x7f0a0011;
     }
     public static final class style {
         /** 
@@ -2647,7 +2646,7 @@ containing a value of this type.
          */
         public static final int[] MenuView = {
             0x010100ae, 0x0101012c, 0x0101012d, 0x0101012e,
-            0x0101012f, 0x01010130, 0x01010131, 0x010103ea
+            0x0101012f, 0x01010130, 0x01010131, 0x01010435
         };
         /**
           <p>
