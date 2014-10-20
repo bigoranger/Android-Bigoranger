@@ -52,7 +52,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	public static String name; // 文件名称
 	public static String sdcardRoot; // sd卡根路径
 	private static String fileName = ""; // 文件绝对路径
-	private static final String IMAGE = "BigOranger"+File.separator+"Image";
+	private static final String IMAGE = "BigOranger" + File.separator + "Image";
 	private File file; // 文件
 	private Uri u; // 从相册获取图片的uri
 	private static DisplayMetrics metrics; // 手机屏幕分辨率
@@ -156,7 +156,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 				Environment.MEDIA_MOUNTED)) { // 判断是否存在SD卡
 
 			// 根据日期生成文件名
-			file = new File(sdcardRoot + IMAGE + "/", name);
+			file = new File(sdcardRoot + IMAGE + File.separator, name);
 
 			Uri uri = Uri.fromFile(file);// 根据文件得到Uri对象
 
@@ -200,7 +200,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			if (resultCode == Activity.RESULT_OK) {
 
 				Log.v("拍照", "拍照");
-				String str = fileName.substring(fileName.lastIndexOf("/") + 1,
+				String str = fileName.substring(fileName.lastIndexOf(File.separator) + 1,
 						fileName.lastIndexOf("."));
 				String newName = str + "_mini";
 				try {
@@ -239,13 +239,14 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 								|| path.endsWith("jpeg")) {
 							picPath = path;
 							String str = DateFormat.format("yyyyMMdd_hhmmss",
-									Calendar.getInstance(Locale.CHINA)).toString();
+									Calendar.getInstance(Locale.CHINA))
+									.toString();
 							String newName = str + "_mini";
 							// 以字节流的形式压缩，以便上传到服务器！！
 							saveCompressPic("", newName);
 							initImageAdapter(newName);// 初始化图片适配器
 
-							String toPath = sdcardRoot + IMAGE + "/";
+							String toPath = sdcardRoot + IMAGE + File.separator;
 							copyFile(picPath, toPath, str + ".jpg");// 将选择的图片复制到指定路径下
 
 						} else {
@@ -271,7 +272,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	 */
 	private void initImageAdapter(String fname) {
 
-		list.add(sdcardRoot + IMAGE + "/" + fname + ".jpg");
+		list.add(sdcardRoot + IMAGE + File.separator + fname + ".jpg");
 		if (list.size() > 0 && list.size() < 9) {
 			myGirdView.setAdapter(new ImageAdapter(PublishGoodsActivity.this,
 					list, metrics.widthPixels));
@@ -349,7 +350,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	private void saveCompressPic(String path, String newName) throws Exception {
 
 		Log.v("newName", newName);
-		File file_02 = new File(sdcardRoot + IMAGE + "/", newName + ".jpg");
+		File file_02 = new File(sdcardRoot + IMAGE + File.separator, newName + ".jpg");
 		FileOutputStream out = new FileOutputStream(file_02);
 
 		Bitmap oldBitmap;
@@ -454,7 +455,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		FileInputStream in = new FileInputStream(new File(filePath));
 		// 目标文件
 		FileOutputStream out = new FileOutputStream(new File(sdcardRoot + IMAGE
-				+ "/", fileName + ".jpg"));
+				+ File.separator, fileName + ".jpg"));
 		byte[] buf = new byte[1024];
 		int length = 0;
 		while ((length = in.read(buf)) != -1) {
