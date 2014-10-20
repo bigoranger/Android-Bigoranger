@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
+
 import android.util.Log;
 
 /**
@@ -57,9 +58,12 @@ public class UploadUtils {
 			conn.setUseCaches(false); // 不允许使用缓存
 			conn.setRequestMethod("POST"); // 请求方式
 			conn.setRequestProperty("Charset", CHARSET); // 设置编码
+			// 设置User-Agent: Fiddler
+			conn.setRequestProperty("ser-Agent", "Fiddler");
 			conn.setRequestProperty("connection", "keep-alive");
 			conn.setRequestProperty("Content-Type", CONTENT_TYPE + ";boundary="
 					+ BOUNDARY);
+
 			if (file != null) {
 				/**
 				 * 当文件不为空，把文件包装并且上传
@@ -94,17 +98,29 @@ public class UploadUtils {
 						.getBytes();
 				dos.write(end_data);
 				dos.flush();
-				/**
-				 * 获取响应码 200=成功 当响应成功，获取响应的流
-				 */
-				int res = conn.getResponseCode();
+			}
+			
+//			if(json!=null){
+//				conn.setRequestProperty("Content-Type", "application/json");
+//				OutputStream os = conn.getOutputStream();
+//				//把JSON数据转换成String类型使用输出流向服务器写
+//				String content = String.valueOf(json);
+//				os.write(content.getBytes());
+//				os.flush();
+//			}
+			
+			/**
+			 * 获取响应码 200=成功 当响应成功，获取响应的流
+			 */
+			int res = conn.getResponseCode();
+
+			Log.e(TAG, "response code:" + res);
+			if (res == 200) {
 				String msg = dealResponseResult(conn.getInputStream());
 				Log.e(TAG, msg);
-				Log.e(TAG, "response code:" + res);
-				if (res == 200) {
-					return SUCCESS;
-				}
+				return SUCCESS;
 			}
+			
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -115,8 +131,8 @@ public class UploadUtils {
 
 	/**
 	 * 
-	 * Function：处理服务器响应结果
-	 * author：lionel
+	 * Function：处理服务器响应结果 author：lionel
+	 * 
 	 * @param in
 	 * @return
 	 */
@@ -133,12 +149,10 @@ public class UploadUtils {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-
 			try {
 				if (in != null) {
 					in.close();
 				}
-
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

@@ -10,6 +10,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -28,9 +31,11 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -41,26 +46,29 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	private static final String TAG = "uploadImage";
 	private static final int TAKE_PHOTO = 1;
 	private static final int SELECT_IMAGE = 2;
-	private Button takePhoto, selectImage;
+	private String json = null;
 
 	private String picPath = ""; // 图片路径
 	public static String name; // 文件名称
 	public static String sdcardRoot; // sd卡根路径
 	private static String fileName = ""; // 文件绝对路径
 	private static final String IMAGE = "bigOranger";
-	File file; // 文件
+	private File file; // 文件
 	private Uri u; // 从相册获取图片的uri
 	private static DisplayMetrics metrics; //手机屏幕分辨率
 	ContentResolver cr;
 
-	private GridView myGirdView; // 网格
 	public List<String> list = new ArrayList<String>();// 用于存放图片的集合
 	private int index;
+	private GridView myGirdView; // 网格
+	private Button takePhoto, selectImage, saveBtn, backBtn;
+	private EditText title, price, costPrice,presentation;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		setContentView(R.layout.uploadpic);
 		// 实例化sdcardRoot
 		sdcardRoot = Environment.getExternalStorageDirectory()
@@ -75,16 +83,35 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		
 		metrics=new DisplayMetrics(); //获取手机分辨率
         this.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        
-		selectImage = (Button) this.findViewById(R.id.selectImage);
-		takePhoto = (Button) findViewById(R.id.takePhoto);
+
+
+		init();
 		selectImage.setOnClickListener(this);
 		takePhoto.setOnClickListener(this);
-
-		this.myGirdView = (GridView) super.findViewById(R.id.myGridView);
-
+		selectImage.setOnClickListener(this);
+		takePhoto.setOnClickListener(this);
 		this.myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
+		title.setOnFocusChangeListener(new OnFocusChangeListenerImpl());
+		myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
+		sdcardRoot = Environment.getExternalStorageDirectory()	// 实例化sdcardRoot
+				.getAbsolutePath() + File.separator;
+		Log.v("ddd", "dfsesef");
+
+	}
+	
+	private void init() {
+		setContentView(R.layout.uploadpic);
+		selectImage = (Button) findViewById(R.id.selectImage);
+		takePhoto = (Button) findViewById(R.id.takePhoto);
+		saveBtn = (Button) findViewById(R.id.saveBtn);
+		backBtn = (Button) findViewById(R.id.backBtn);
 		
+		title = (EditText)findViewById(R.id.title);
+		price = (EditText)findViewById(R.id.price);
+		costPrice = (EditText)findViewById(R.id.costPrice);
+		presentation = (EditText)findViewById(R.id.presentation);
+		
+		myGirdView = (GridView)findViewById(R.id.myGridView);
 	}
 
 	@Override
@@ -106,10 +133,10 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 	/**
 	 * 
-	 * Function：图片上传 author：lionel
+	 * Function：图片和普通上传 author：lionel
 	 */
 	private void picUpload() {
-		if (picPath != null && picPath.length() > 0) {
+		if ((picPath != null && picPath.length() > 0)) {
 			UploadFileTask uploadFileTask = new UploadFileTask(this);
 			uploadFileTask.execute(picPath);
 		}
@@ -130,7 +157,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 				Environment.MEDIA_MOUNTED)) { // 判断是否存在SD卡
 			
 			// 根据日期生成文件名
-			file = new File(sdcardRoot + IMAGE+"/", name);
+			file = new File(sdcardRoot + IMAGE + "/", name);
 
 			Uri uri = Uri.fromFile(file);// 根据文件得到Uri对象
 
@@ -180,7 +207,9 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 				try {
 					// 以字节流的形式压缩，以便上传到服务器！！
 					saveCompressPic(fileName, newName);
+
 					initImageAdapter(newName);//初始化图片适配器
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -216,6 +245,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 									picPath.lastIndexOf("."));
 							String newName = str + "_mini";
 							// 以字节流的形式压缩，以便上传到服务器！！
+
 							saveCompressPic("", newName);							
 							initImageAdapter(newName);//初始化图片适配器
 							
@@ -360,7 +390,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
 					LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
 			showImg.setLayoutParams(layoutParams);
-			
+
 			index = position;
 			String filename = list.get(position).replace("_mini", "");
      
@@ -382,7 +412,55 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		}
 	}
 
-	
+	private class OnFocusChangeListenerImpl implements OnFocusChangeListener{
+
+		/* (non-Javadoc)
+		 * @see android.view.View.OnFocusChangeListener#onFocusChange(android.view.View, boolean)
+		 */
+		@Override
+		public void onFocusChange(View v, boolean hasFocus) {
+			if(v.getId()==title.getId()){
+				String text = title.getText().toString();
+				if(null!=text && "".equals(text)){
+					if(hasFocus){
+						
+					}else{
+						JSONObject jsonObject = new JSONObject();
+						try {
+							jsonObject.put("title", text);
+							json = String.valueOf(jsonObject);
+						} catch (JSONException e) {
+							throw new RuntimeException(e);
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	/**
+	 * 复制图片文件
+	 * 
+	 * @param filePath
+	 * @param fileName
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unused")
+	private void copyPic(String filePath, String fileName) throws Exception {
+		// 源文件
+		FileInputStream in = new FileInputStream(new File(filePath));
+		// 目标文件
+		FileOutputStream out = new FileOutputStream(new File(sdcardRoot + IMAGE
+				+ "/", fileName + ".jpg"));
+		byte[] buf = new byte[1024];
+		int length = 0;
+		while ((length = in.read(buf)) != -1) {
+			out.write(buf, 0, length);
+		}
+		in.close();
+		out.close();
+	}
+
 	/**
 	 * 查看大图
 	 * 
@@ -411,6 +489,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 						list.remove(list.get(index));
 						myGirdView.setAdapter(new ImageAdapter(
 								PublishGoodsActivity.this, list,metrics.widthPixels));
+
 					}
 				})
 				.setNegativeButton("取消", new DialogInterface.OnClickListener() {
