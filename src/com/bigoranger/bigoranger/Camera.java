@@ -11,7 +11,7 @@ import android.media.ExifInterface;
 import android.util.Log;
 
 public class Camera {
-
+ //ffff
 	/**
 	 *  图片质量（占用内存大小）压缩
 	 * @param image
