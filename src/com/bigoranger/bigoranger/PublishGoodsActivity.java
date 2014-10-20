@@ -1,10 +1,9 @@
 package com.bigoranger.bigoranger;
 
-import android.app.Activity;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.Locale;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -28,18 +28,17 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Toast;
 
 public class PublishGoodsActivity extends Activity implements OnClickListener {
@@ -78,7 +77,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		File f = new File(sdcardRoot + IMAGE);
 		if (!f.exists()) {
 			f.mkdirs();
-			// Log.v("test", f.getPath());
 		}
 
 		metrics = new DisplayMetrics(); // 获取手机分辨率
@@ -94,7 +92,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
 		sdcardRoot = Environment.getExternalStorageDirectory() // 实例化sdcardRoot
 				.getAbsolutePath() + File.separator;
-		Log.v("ddd", "dfsesef");
 
 	}
 
@@ -115,7 +112,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
-		Log.e(TAG, v.getId() + "");
 		switch (v.getId()) {
 		case R.id.selectImage:
 			selectImage();
@@ -162,7 +158,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 			fileName = file.getPath();
-			Log.v("filename001", fileName);
 			startActivityForResult(intent, TAKE_PHOTO);
 
 		} else {
@@ -199,8 +194,8 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		if (requestCode == TAKE_PHOTO) {
 			if (resultCode == Activity.RESULT_OK) {
 
-				Log.v("拍照", "拍照");
-				String str = fileName.substring(fileName.lastIndexOf(File.separator) + 1,
+				String str = fileName.substring(
+						fileName.lastIndexOf(File.separator) + 1,
 						fileName.lastIndexOf("."));
 				String newName = str + "_mini";
 				try {
@@ -217,10 +212,8 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 		if (requestCode == SELECT_IMAGE) { // 选择照片
 			if (resultCode == Activity.RESULT_OK) {
-				Log.v("选择图片", "选择图片");
 				// 当选择的图片不为空的话，在获取到图片的途径
 				u = data.getData();
-				Log.e(TAG, "uri = " + u);
 				try {
 					String[] pojo = { MediaStore.Images.Media.DATA };
 
@@ -349,8 +342,8 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	 */
 	private void saveCompressPic(String path, String newName) throws Exception {
 
-		Log.v("newName", newName);
-		File file_02 = new File(sdcardRoot + IMAGE + File.separator, newName + ".jpg");
+		File file_02 = new File(sdcardRoot + IMAGE + File.separator, newName
+				+ ".jpg");
 		FileOutputStream out = new FileOutputStream(file_02);
 
 		Bitmap oldBitmap;
@@ -391,14 +384,19 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			index = position;
 			String filename = list.get(position).replace("_mini", "");
 
-			Log.v("widthpiels*heightPixels", metrics.widthPixels + "*"
-					+ metrics.heightPixels);
-
+			//判断图片是否存在，不存在则更新视图
+			if (!new File(filename).exists()) {
+				Toast.makeText(getApplicationContext(), "图片文件不存在",
+						Toast.LENGTH_SHORT).show();
+				list.remove(position);
+				myGirdView.setAdapter(new ImageAdapter(
+						PublishGoodsActivity.this, list,
+						metrics.widthPixels));
+				return;
+			}
 			// 通过不同手机的分辨率，比例缩放图片
 			Bitmap bitmap = Camera.getimage(filename, metrics.widthPixels,
 					metrics.heightPixels);
-			// Bitmap
-			// thbm=ThumbnailUtils.extractThumbnail(bitmap,500,600);//生成指定大小缩略图
 
 			// 获取图片的旋转角度，有些系统把拍照的图片旋转了，有的没有旋转
 			int degree = Camera.readPictureDegree(filename);
@@ -413,13 +411,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 	private class OnFocusChangeListenerImpl implements OnFocusChangeListener {
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * android.view.View.OnFocusChangeListener#onFocusChange(android.view
-		 * .View, boolean)
-		 */
+		
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 			if (v.getId() == title.getId()) {

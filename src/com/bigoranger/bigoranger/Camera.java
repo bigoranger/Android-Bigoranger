@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
-import android.util.Log;
 
 public class Camera {
 
@@ -23,7 +22,6 @@ public class Camera {
 		image.compress(Bitmap.CompressFormat.JPEG, 100, baos);// 质量压缩方法，这里100表示不压缩，把压缩后的数据存放到baos中
 		int options = 90;
 
-		Log.v("finally_size", baos.toByteArray().length / 1024 + "");
 
 		while (baos.toByteArray().length / 1024 > 200) { // 循环判断如果压缩后图片是否大于200kb,大于继续压缩
 			baos.reset();// 重置baos即清空baos
@@ -31,17 +29,12 @@ public class Camera {
 			options -= 10;// 每次都减少10
 
 		}
-		Log.v("finally_size", baos.toByteArray().length / 1024 + "");
 
 		ByteArrayInputStream isBm = new ByteArrayInputStream(baos.toByteArray());// 把压缩后的数据baos存放到ByteArrayInputStream中
-
-		Log.v("isBm_size", isBm.available() / 1024 + ""); // 87
 
 		// 把ByteArrayInputStream数据生成图片,
 		// 注意：以bitmap形式存在时，图片又会变大！！！！ 所以上传采取用流的形式
 		Bitmap newBitmap = BitmapFactory.decodeStream(isBm, null, null);
-
-		// Log.v("bitmap_size",newBitmap.getByteCount()/1024+""); //1500
 
 		return newBitmap;
 	}
@@ -76,8 +69,6 @@ public class Camera {
 			be = 1;
 		newOpts.inSampleSize = be;
 		bitmap = BitmapFactory.decodeFile(srcPath, newOpts);
-		Log.v("width", bitmap.getWidth()+"");
-		Log.v("height", bitmap.getHeight()+"");
 		return bitmap;
 	}
 	
@@ -119,7 +110,6 @@ public class Camera {
 		 Matrix matrix = new Matrix();;  
 		 matrix.postRotate(angle);  
 		 System.out.println("angle2=" + angle);  
-		 Log.v("angle", angle+"");
 		 // 创建新的图片  
 		 Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,  
 		 bitmap.getWidth(), bitmap.getHeight(), matrix, true);  
