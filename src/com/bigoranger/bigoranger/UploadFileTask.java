@@ -2,9 +2,6 @@ package com.bigoranger.bigoranger;
 
 import java.io.File;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
@@ -58,15 +55,16 @@ import android.widget.Toast;
  * @version 1.0
  */
 public class UploadFileTask extends AsyncTask<String, Void, String> {
-	public static final String requestURL = "http://10.0.2.2:8080/AndroidUploadFileWeb/FileImageUploadServlet";
+	public String requestURL = null;
 	/**
 	 * 可变长的输入参数，与AsyncTask.exucute()对应
 	 */
 	private ProgressDialog pdialog;
 	private Activity context = null;
 
-	public UploadFileTask(Activity ctx) {
+	public UploadFileTask(Activity ctx, String requestURL) {
 		this.context = ctx;
+		this.requestURL = requestURL;
 		pdialog = ProgressDialog.show(context, "请稍等...", "图片正在上传");
 	}
 

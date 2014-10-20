@@ -17,5 +17,10 @@
     <string name="server">提供送货</string>
     <string name="save">保存</string>
     <string name="back">返回</string>
-
+    
+    <string-array name="TradeWay">
+        <item>线上</item>
+        <item>线下</item>
+        <item>线上/线下</item>
+    </string-array>
 </resources>

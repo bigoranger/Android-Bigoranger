@@ -1,12 +1,10 @@
 package com.bigoranger.bigoranger;
 
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -100,15 +98,6 @@ public class UploadUtils {
 				dos.flush();
 			}
 			
-//			if(json!=null){
-//				conn.setRequestProperty("Content-Type", "application/json");
-//				OutputStream os = conn.getOutputStream();
-//				//把JSON数据转换成String类型使用输出流向服务器写
-//				String content = String.valueOf(json);
-//				os.write(content.getBytes());
-//				os.flush();
-//			}
-			
 			/**
 			 * 获取响应码 200=成功 当响应成功，获取响应的流
 			 */
@@ -116,7 +105,7 @@ public class UploadUtils {
 
 			Log.e(TAG, "response code:" + res);
 			if (res == 200) {
-				String msg = dealResponseResult(conn.getInputStream());
+				String msg = JsonUtil.recJsonfromServer(conn.getInputStream());
 				Log.e(TAG, msg);
 				return SUCCESS;
 			}
@@ -127,35 +116,5 @@ public class UploadUtils {
 			e.printStackTrace();
 		}
 		return FAILURE;
-	}
-
-	/**
-	 * 
-	 * Function：处理服务器响应结果 author：lionel
-	 * 
-	 * @param in
-	 * @return
-	 */
-	public static String dealResponseResult(InputStream in) {
-		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					in, CHARSET));
-			StringBuilder sb = new StringBuilder();
-			String msg = null;
-			while ((msg = reader.readLine()) != null) {
-				sb.append(msg);
-			}
-			return sb.toString();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} finally {
-			try {
-				if (in != null) {
-					in.close();
-				}
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
 	}
 }
