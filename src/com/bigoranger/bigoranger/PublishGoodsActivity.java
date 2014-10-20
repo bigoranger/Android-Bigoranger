@@ -52,17 +52,17 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	public static String name; // 文件名称
 	public static String sdcardRoot; // sd卡根路径
 	private static String fileName = ""; // 文件绝对路径
-	private static final String IMAGE = "BigOranger";
+	private static final String IMAGE = "BigOranger"+File.separator+"Image";
 	private File file; // 文件
 	private Uri u; // 从相册获取图片的uri
-	private static DisplayMetrics metrics; //手机屏幕分辨率
+	private static DisplayMetrics metrics; // 手机屏幕分辨率
 	ContentResolver cr;
 
 	public List<String> list = new ArrayList<String>();// 用于存放图片的集合
 	private int index;
 	private GridView myGirdView; // 网格
 	private Button takePhoto, selectImage, saveBtn, backBtn;
-	private EditText title, price, costPrice,presentation;
+	private EditText title, price, costPrice, presentation;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -74,16 +74,15 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		sdcardRoot = Environment.getExternalStorageDirectory()
 				.getAbsolutePath() + File.separator;
 
-		//在指定位置创建用于存放图片文件的文件夹
+		// 在指定位置创建用于存放图片文件的文件夹
 		File f = new File(sdcardRoot + IMAGE);
 		if (!f.exists()) {
 			f.mkdirs();
-			//Log.v("test", f.getPath());
+			// Log.v("test", f.getPath());
 		}
-		
-		metrics=new DisplayMetrics(); //获取手机分辨率
-        this.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
+		metrics = new DisplayMetrics(); // 获取手机分辨率
+		this.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
 		init();
 		selectImage.setOnClickListener(this);
@@ -93,25 +92,25 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		this.myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
 		title.setOnFocusChangeListener(new OnFocusChangeListenerImpl());
 		myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
-		sdcardRoot = Environment.getExternalStorageDirectory()	// 实例化sdcardRoot
+		sdcardRoot = Environment.getExternalStorageDirectory() // 实例化sdcardRoot
 				.getAbsolutePath() + File.separator;
 		Log.v("ddd", "dfsesef");
 
 	}
-	
+
 	private void init() {
 		setContentView(R.layout.uploadpic);
 		selectImage = (Button) findViewById(R.id.selectImage);
 		takePhoto = (Button) findViewById(R.id.takePhoto);
 		saveBtn = (Button) findViewById(R.id.saveBtn);
 		backBtn = (Button) findViewById(R.id.backBtn);
-		
-		title = (EditText)findViewById(R.id.title);
-		price = (EditText)findViewById(R.id.price);
-		costPrice = (EditText)findViewById(R.id.costPrice);
-		presentation = (EditText)findViewById(R.id.presentation);
-		
-		myGirdView = (GridView)findViewById(R.id.myGridView);
+
+		title = (EditText) findViewById(R.id.title);
+		price = (EditText) findViewById(R.id.price);
+		costPrice = (EditText) findViewById(R.id.costPrice);
+		presentation = (EditText) findViewById(R.id.presentation);
+
+		myGirdView = (GridView) findViewById(R.id.myGridView);
 	}
 
 	@Override
@@ -141,7 +140,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			uploadFileTask.execute(picPath);
 		}
 	}
-	
+
 	/**
 	 * 拍照
 	 * 
@@ -155,7 +154,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		// 给intent加上输出参数，为返回原始图片------
 		if (Environment.getExternalStorageState().equals(
 				Environment.MEDIA_MOUNTED)) { // 判断是否存在SD卡
-			
+
 			// 根据日期生成文件名
 			file = new File(sdcardRoot + IMAGE + "/", name);
 
@@ -208,7 +207,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 					// 以字节流的形式压缩，以便上传到服务器！！
 					saveCompressPic(fileName, newName);
 
-					initImageAdapter(newName);//初始化图片适配器
+					initImageAdapter(newName);// 初始化图片适配器
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -239,18 +238,15 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 						if (path.endsWith("jpg") || path.endsWith("png")
 								|| path.endsWith("jpeg")) {
 							picPath = path;
-							Log.e(TAG, picPath);
-							String str = picPath.substring(
-									picPath.lastIndexOf("/") + 1,
-									picPath.lastIndexOf("."));
+							String str = DateFormat.format("yyyyMMdd_hhmmss",
+									Calendar.getInstance(Locale.CHINA)).toString();
 							String newName = str + "_mini";
 							// 以字节流的形式压缩，以便上传到服务器！！
+							saveCompressPic("", newName);
+							initImageAdapter(newName);// 初始化图片适配器
 
-							saveCompressPic("", newName);							
-							initImageAdapter(newName);//初始化图片适配器
-							
-							String toPath=sdcardRoot + IMAGE + "/";
-							copyFile(picPath,toPath,str+".jpg");//将选择的图片复制到指定路径下
+							String toPath = sdcardRoot + IMAGE + "/";
+							copyFile(picPath, toPath, str + ".jpg");// 将选择的图片复制到指定路径下
 
 						} else {
 							alert();
@@ -267,63 +263,62 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		super.onActivityResult(requestCode, resultCode, data);
 		picUpload();
 	}
-    
+
 	/**
 	 * 初始化图片适配器
+	 * 
 	 * @param fname
 	 */
-	private void initImageAdapter(String fname){
-		
+	private void initImageAdapter(String fname) {
+
 		list.add(sdcardRoot + IMAGE + "/" + fname + ".jpg");
-		if (list.size() > 0&&list.size()<9) {
-			myGirdView.setAdapter(new ImageAdapter(
-					PublishGoodsActivity.this, list,metrics.widthPixels));
-			//显示上传进度
+		if (list.size() > 0 && list.size() < 9) {
+			myGirdView.setAdapter(new ImageAdapter(PublishGoodsActivity.this,
+					list, metrics.widthPixels));
+			// 显示上传进度
 			showProgressDialog();
-		}else{
-			Toast.makeText(getApplicationContext(), "最多只能上传8张图片", Toast.LENGTH_SHORT)
-			 .show();
+		} else {
+			Toast.makeText(getApplicationContext(), "最多只能上传8张图片",
+					Toast.LENGTH_SHORT).show();
 		}
 	}
-	
+
 	/**
 	 * 显示图片上传进度
 	 */
 	@SuppressWarnings("unused")
-	private void showProgressDialog(){
-		final ProgressDialog proDia=ProgressDialog.show(this,"", 
-				  "图片上传中,请稍候...");
-		new Thread(){
-			public void run(){
+	private void showProgressDialog() {
+		final ProgressDialog proDia = ProgressDialog.show(this, "",
+				"图片上传中,请稍候...");
+		new Thread() {
+			public void run() {
 				try {
 					Thread.sleep(2000);
 				} catch (Exception e) {
-				}finally{
+				} finally {
 					proDia.dismiss();
 				}
-				
+
 			}
 		}.start();
 		proDia.show();
 	}
-	
-	
+
 	/**
 	 * 复制文件
+	 * 
 	 * @param fromPath
 	 * @param toPath
 	 * @param newName
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unused")
-	private void copyFile(String fromPath,String toPath,String newName)
-			throws Exception{
+	private void copyFile(String fromPath, String toPath, String newName)
+			throws Exception {
 		// 源文件
-		FileInputStream in = new FileInputStream(new File(
-				fromPath));
+		FileInputStream in = new FileInputStream(new File(fromPath));
 		// 目标文件
-		FileOutputStream out = new FileOutputStream(
-				new File(toPath, newName));
+		FileOutputStream out = new FileOutputStream(new File(toPath, newName));
 		byte[] buf = new byte[1024];
 		int length = 0;
 		while ((length = in.read(buf)) != -1) {
@@ -332,7 +327,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		in.close();
 		out.close();
 	}
-	
+
 	private void alert() {
 		Dialog dialog = new AlertDialog.Builder(this).setTitle("提示")
 				.setMessage("您选择的不是有效的图片")
@@ -346,6 +341,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 	/**
 	 * 保存压缩图片(拍照和相册选择)到指定路径
+	 * 
 	 * @param path
 	 * @param newName
 	 * @throws Exception
@@ -393,11 +389,13 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 			index = position;
 			String filename = list.get(position).replace("_mini", "");
-     
-            Log.v("widthpiels*heightPixels", metrics.widthPixels+"*"+metrics.heightPixels);
-			
-			//通过不同手机的分辨率，比例缩放图片
-		     Bitmap bitmap= Camera.getimage(filename,metrics.widthPixels,metrics.heightPixels);
+
+			Log.v("widthpiels*heightPixels", metrics.widthPixels + "*"
+					+ metrics.heightPixels);
+
+			// 通过不同手机的分辨率，比例缩放图片
+			Bitmap bitmap = Camera.getimage(filename, metrics.widthPixels,
+					metrics.heightPixels);
 			// Bitmap
 			// thbm=ThumbnailUtils.extractThumbnail(bitmap,500,600);//生成指定大小缩略图
 
@@ -412,19 +410,23 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		}
 	}
 
-	private class OnFocusChangeListenerImpl implements OnFocusChangeListener{
+	private class OnFocusChangeListenerImpl implements OnFocusChangeListener {
 
-		/* (non-Javadoc)
-		 * @see android.view.View.OnFocusChangeListener#onFocusChange(android.view.View, boolean)
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * android.view.View.OnFocusChangeListener#onFocusChange(android.view
+		 * .View, boolean)
 		 */
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
-			if(v.getId()==title.getId()){
+			if (v.getId() == title.getId()) {
 				String text = title.getText().toString();
-				if(null!=text && "".equals(text)){
-					if(hasFocus){
-						
-					}else{
+				if (null != text && "".equals(text)) {
+					if (hasFocus) {
+
+					} else {
 						JSONObject jsonObject = new JSONObject();
 						try {
 							jsonObject.put("title", text);
@@ -436,8 +438,9 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 				}
 			}
 		}
-		
+
 	}
+
 	/**
 	 * 复制图片文件
 	 * 
@@ -464,8 +467,9 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	/**
 	 * 查看大图
 	 * 
-	 * @param iv  显示大图的ImageView组件
-	 *    
+	 * @param iv
+	 *            显示大图的ImageView组件
+	 * 
 	 */
 	public void showBigImg(ImageView iv) {
 		Dialog dialog = new AlertDialog.Builder(PublishGoodsActivity.this)
@@ -488,7 +492,8 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 						// 3,从显示视图删除，并更新到gridview
 						list.remove(list.get(index));
 						myGirdView.setAdapter(new ImageAdapter(
-								PublishGoodsActivity.this, list,metrics.widthPixels));
+								PublishGoodsActivity.this, list,
+								metrics.widthPixels));
 
 					}
 				})
