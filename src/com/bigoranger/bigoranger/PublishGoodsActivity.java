@@ -44,12 +44,11 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	private static final int SELECT_IMAGE = 2;
 	private String json = null;
 
-	//ghhghth
 	private String picPath = ""; // 图片路径
 	public static String name; // 文件名称
 	public static String sdcardRoot; // sd卡根路径
 	private static String fileName = ""; // 文件绝对路径
-	private static final String IMAGE = "bigOranger";
+	private static final String IMAGE = "BigOranger";
 	private File file; // 文件
 	private Uri u; // 从相册获取图片的uri
 
@@ -117,7 +116,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			uploadFileTask.execute(picPath);
 		}
 	}
-
+	
 	/**
 	 * 拍照
 	 * 
