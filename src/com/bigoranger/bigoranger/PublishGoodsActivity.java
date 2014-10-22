@@ -3,15 +3,26 @@ package com.bigoranger.bigoranger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilterWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.bigoranger.bigoranger.adapter.AddressAdapter;
+import com.bigoranger.bigoranger.adapter.CategoryAdapter;
+import com.bigoranger.bigoranger.adapter.ServiceAdapter;
+import com.bigoranger.bigoranger.domain.Address;
+import com.bigoranger.bigoranger.domain.Category;
+import com.bigoranger.bigoranger.domain.Service;
+import com.bigoranger.bigoranger.util.HttpUtil;
+import com.bigoranger.bigoranger.util.JsonForResult;
+import com.bigoranger.bigoranger.util.JsonUtil;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -39,25 +50,31 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 public class PublishGoodsActivity extends Activity implements OnClickListener {
-	private static final String TAG = "uploadImage";//FileImageUploadServlet
-	private static final String Request_URL = "http://10.0.2.2:8080/AndroidUploadFileWeb/FileImageUploadServlet";
-	private static final String CATEGORY_URL = "http://10.0.2.2:8080/AndroidUploadFileWeb/JsonUploadServlet";
-//	private static final String php_URL = "http://";
+	/******************************************************************************/
+	private static String SERVER_URL = "http://10.200.10.90:88/Orange";
+	private static String ADD_URL = "/Api/Goods/add";
+	private static String GET_CATEGORY_URL = "/Api/Goods/getcategory";
+	private static String UPLOAD_URL = "/Api/Goods/upload?userid=0&goodsid=0";
+	private static String DELIMG_URL = "/Api/Goods/delimg";
+	private static String SAVE_URL = "/Api/Goods/save";
+
 	private static final int TAKE_PHOTO = 1;
 	private static final int SELECT_IMAGE = 2;
 
+	/******************************************************************************/
+
+	private static final String IMAGE = "BigOranger" + File.separator + "Image";
 	private String picPath = ""; // 图片路径
 	public static String name; // 文件名称
-	public static String sdcardRoot; // sd卡根路径
+	public static String sdcardRoot = Environment.getExternalStorageDirectory()
+			.getAbsolutePath() + File.separator;; // sd卡根路径
 	private static String fileName = ""; // 文件绝对路径
-	private static final String IMAGE = "BigOranger" + File.separator + "Image";
 	private File file; // 文件
 	private Uri u; // 从相册获取图片的uri
 	private static DisplayMetrics metrics; // 手机屏幕分辨率
@@ -65,42 +82,37 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 	public List<String> list = new ArrayList<String>();// 用于存放图片的集合
 	private int index;
-	private GridView myGirdView; // 网格
+	private com.bigoranger.bigoranger.MyGridView myGirdView,
+			service_MyGridView; // 网格
 	private Button takePhoto, selectImage, saveBtn, backBtn;
 	private EditText title, price, costPrice, presentation;
-	private Spinner category_Spinner,address_Spinner,tradeWay_Spinner;
+	private Spinner category_Spinner, address_Spinner, tradeWay_Spinner;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		super.setContentView(R.layout.uploadpic);
+		init();
 
-		setContentView(R.layout.uploadpic);
-		// 实例化sdcardRoot
-		sdcardRoot = Environment.getExternalStorageDirectory()
-				.getAbsolutePath() + File.separator;
+		selectImage.setOnClickListener(this);
+		takePhoto.setOnClickListener(this);
+		myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
+		title.setOnFocusChangeListener(new OnFocusChangeListenerImpl());
 
+		/********************************************************************************/
 		// 在指定位置创建用于存放图片文件的文件夹
 		File f = new File(sdcardRoot + IMAGE);
 		if (!f.exists()) {
 			f.mkdirs();
 		}
-
 		metrics = new DisplayMetrics(); // 获取手机分辨率
 		this.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-		init();
-		selectImage.setOnClickListener(this);
-		takePhoto.setOnClickListener(this);
-		selectImage.setOnClickListener(this);
-		takePhoto.setOnClickListener(this);
-		this.myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
-		title.setOnFocusChangeListener(new OnFocusChangeListenerImpl());
-		myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
-		sdcardRoot = Environment.getExternalStorageDirectory() // 实例化sdcardRoot
-				.getAbsolutePath() + File.separator;
+		/*********************************************************************************/
 	}
 
+	@SuppressLint("HandlerLeak")
 	private void init() {
 		setContentView(R.layout.uploadpic);
 		selectImage = (Button) findViewById(R.id.selectImage);
@@ -112,21 +124,51 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		price = (EditText) findViewById(R.id.price);
 		costPrice = (EditText) findViewById(R.id.costPrice);
 		presentation = (EditText) findViewById(R.id.presentation);
-		
+
 		category_Spinner = (Spinner) findViewById(R.id.category);
 		address_Spinner = (Spinner) findViewById(R.id.address);
 		tradeWay_Spinner = (Spinner) findViewById(R.id.tradeWay);
-	
-		String jsonString = "{'1':'杂志','2':'计算机'}";
-		List<String> list = JsonUtil.parseJsonfromServer(jsonString);
-		
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,list);
-		category_Spinner.setAdapter(adapter);
-		
-		myGirdView = (GridView) findViewById(R.id.myGridView);
+		myGirdView = (MyGridView) findViewById(R.id.myGridView);
+		service_MyGridView = (MyGridView) findViewById(R.id.service);
+
 		String[] tItems = getResources().getStringArray(R.array.TradeWay);
-		ArrayAdapter<String> trade_Adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, tItems);
-		tradeWay_Spinner.setAdapter(trade_Adapter);
+		ArrayAdapter<String> tradAdapter = new ArrayAdapter<String>(this,
+				android.R.layout.simple_spinner_item, tItems);
+		tradeWay_Spinner.setAdapter(tradAdapter);
+		final Handler handler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				String jsonString = (String) msg.obj;
+				JsonForResult result = JsonUtil.parseJsonFirst(jsonString);
+				
+				List<Category> categories = result.getCategories();
+				List<Address> addresses = result.getAddresses();
+				List<Service> services = result.getServices();
+
+				CategoryAdapter cateAdapter = new CategoryAdapter(categories,
+						PublishGoodsActivity.this);
+				AddressAdapter addrAdapter = new AddressAdapter(addresses,
+						PublishGoodsActivity.this);
+				ServiceAdapter servAdapter = new ServiceAdapter(services,
+						PublishGoodsActivity.this);
+
+				category_Spinner.setAdapter(cateAdapter);
+				address_Spinner.setAdapter(addrAdapter);
+				service_MyGridView.setAdapter(servAdapter);
+			}
+		};
+		
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				String jsonString = HttpUtil.sendJson2Server(null, SERVER_URL
+						+ ADD_URL);
+				Message msg = Message.obtain();
+				msg.obj = jsonString;
+				handler.sendMessage(msg);
+			}
+		});
+		thread.start();
 
 	}
 
@@ -138,7 +180,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			break;
 		case R.id.takePhoto:
 			takePhoto();
-			picUpload();
 			break;
 		default:
 			break;
@@ -152,8 +193,8 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	 */
 	private void picUpload() {
 		if ((picPath != null && picPath.length() > 0)) {
-			UploadFileTask uploadFileTask = new UploadFileTask(this,
-					Request_URL);
+			UploadFileTask uploadFileTask = new UploadFileTask(this, SERVER_URL
+					+ UPLOAD_URL);
 			uploadFileTask.execute(picPath);
 		}
 	}
@@ -300,7 +341,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	/**
 	 * 显示图片上传进度
 	 */
-	@SuppressWarnings("unused")
 	private void showProgressDialog() {
 		final ProgressDialog proDia = ProgressDialog.show(this, "",
 				"图片上传中,请稍候...");
@@ -326,7 +366,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	 * @param newName
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unused")
 	private void copyFile(String fromPath, String toPath, String newName)
 			throws Exception {
 		// 源文件
@@ -404,14 +443,13 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			index = position;
 			String filename = list.get(position).replace("_mini", "");
 
-			//判断图片是否存在，不存在则更新视图
+			// 判断图片是否存在，不存在则更新视图
 			if (!new File(filename).exists()) {
 				Toast.makeText(getApplicationContext(), "图片文件不存在",
 						Toast.LENGTH_SHORT).show();
 				list.remove(position);
 				myGirdView.setAdapter(new ImageAdapter(
-						PublishGoodsActivity.this, list,
-						metrics.widthPixels));
+						PublishGoodsActivity.this, list, metrics.widthPixels));
 				return;
 			}
 			// 通过不同手机的分辨率，比例缩放图片
@@ -431,37 +469,44 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 	/**
 	 * Function：监听title失去焦点事件，发送请求到服务器
+	 * 
 	 * @author lionel
-	 *
+	 * 
 	 */
 	private class OnFocusChangeListenerImpl implements OnFocusChangeListener {
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * android.view.View.OnFocusChangeListener#onFocusChange(android.view
-		 * .View, boolean)
-		 */
+		@SuppressLint("HandlerLeak")
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
 			if (v.getId() == title.getId()) {
 				if (!hasFocus) {
 					String text = title.getText().toString().trim();
-					if (text != null && text.length()>0) {
-						final JSONObject jsonObject = new JSONObject();
 
-						try {
-							jsonObject.put("title", text);
-							new Thread(new Runnable() {
-								@Override
-								public void run() {
-									JsonUtil.sendJson2Server(jsonObject, Request_URL);
-								}
-							}).start();
-						} catch (JSONException e) {
-							throw new RuntimeException(e);
-						}
+					if (text != null && text.length() > 0) {
+						Map<String,String> map = new HashMap<String, String>();
+						map.put("Title", text);
+						final JSONObject jsonObject = new JSONObject(map);
+						final Handler getCate_handler = new Handler(){
+							@Override
+							public void handleMessage(Message msg) {
+								String jsonString = (String) msg.obj;
+								List<Category> categories = JsonUtil.parseJsonGetCategory(jsonString);
+								category_Spinner.setAdapter(null);
+								
+								CategoryAdapter new_CateAdapter = new CategoryAdapter(categories, PublishGoodsActivity.this);
+								category_Spinner.setAdapter(new_CateAdapter);
+							}
+						};
+						
+						new Thread(new Runnable() {
+							@Override
+							public void run() {
+								String json = HttpUtil.sendJson2Server(jsonObject,
+										SERVER_URL + GET_CATEGORY_URL);
+								Message msg = Message.obtain();
+								msg.obj = json;
+								getCate_handler.sendMessage(msg);
+							}
+						}).start();
 					}
 				}
 			}
@@ -477,7 +522,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unused")
-	private void copyPic(String filePath, String fileName) throws Exception{
+	private void copyPic(String filePath, String fileName) throws Exception {
 		// 源文件
 		FileInputStream in = new FileInputStream(new File(filePath));
 		// 目标文件

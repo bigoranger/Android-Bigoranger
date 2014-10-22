@@ -45,12 +45,6 @@ public class ImageAdapter extends BaseAdapter {
 		return position;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.widget.Adapter#getView(int, android.view.View,
-	 * android.view.ViewGroup)
-	 */
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ImageView imageView = new ImageView(ctx);

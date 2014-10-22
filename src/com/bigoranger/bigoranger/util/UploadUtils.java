@@ -1,4 +1,4 @@
-package com.bigoranger.bigoranger;
+package com.bigoranger.bigoranger.util;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -10,6 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
+
 
 import android.util.Log;
 
@@ -47,6 +48,7 @@ public class UploadUtils {
 		String CONTENT_TYPE = "multipart/form-data"; // 内容类型
 
 		try {
+			Log.e("URL",RequestURL);
 			URL url = new URL(RequestURL);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setReadTimeout(TIME_OUT);
@@ -98,15 +100,16 @@ public class UploadUtils {
 				dos.flush();
 			}
 			
+			
+			int res = conn.getResponseCode();
+			String result = HttpUtil.recJsonfromServer(conn.getInputStream());
+			
+			
+			Log.e(TAG, "response code:" + res);
 			/**
 			 * 获取响应码 200=成功 当响应成功，获取响应的流
 			 */
-			int res = conn.getResponseCode();
-
-			Log.e(TAG, "response code:" + res);
 			if (res == 200) {
-				String msg = JsonUtil.recJsonfromServer(conn.getInputStream());
-				Log.e(TAG, msg);
 				return SUCCESS;
 			}
 			

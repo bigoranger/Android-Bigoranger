@@ -2,6 +2,8 @@ package com.bigoranger.bigoranger;
 
 import java.io.File;
 
+import com.bigoranger.bigoranger.util.UploadUtils;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;

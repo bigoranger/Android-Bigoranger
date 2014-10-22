@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:layout_height="match_parent" >
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,19 +10,19 @@
 
         <Button
             android:id="@+id/takePhoto"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/take_Photo" />
 
         <Button
             android:id="@+id/selectImage"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/select_Image" />
 
-        <GridView
+        <com.bigoranger.bigoranger.MyGridView
             android:id="@+id/myGridView"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:background="@android:color/background_light"
@@ -32,16 +31,6 @@
             android:padding="10dp"
             android:stretchMode="columnWidth"
             android:verticalSpacing="5dp" />
-    </LinearLayout>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" >
 
             <EditText
                 android:id="@+id/title"
@@ -105,7 +94,7 @@
                     android:layout_height="wrap_content" >
                 </Spinner>
             </LinearLayout>
-
+			<!-- 交易方式下拉框 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -122,13 +111,17 @@
                     android:layout_height="wrap_content" >
                 </Spinner>
             </LinearLayout>
-
-            <CheckBox
-                android:id="@+id/server"
-                android:layout_width="wrap_content"
+            
+            <com.bigoranger.bigoranger.MyGridView 
+                android:id="@+id/service"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/server" />
-
+				android:numColumns="2"
+				android:stretchMode="columnWidth"
+                android:verticalSpacing="10dip"
+                android:horizontalSpacing="10dip"/>
+            
+			<!-- 保存返回按钮 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -146,7 +139,6 @@
                     android:layout_height="wrap_content"
                     android:text="@string/back" />
             </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
-</LinearLayout>
+</ScrollView>

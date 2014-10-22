@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.bigoranger.bigoranger;
+package com.bigoranger.bigoranger.util;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -11,64 +11,24 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.security.auth.PrivateCredentialPermission;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import android.widget.Spinner;
 
 /**
  * @author lionel
  * 
  */
-public class JsonUtil {
+public class HttpUtil {
 	private static final int TIME_OUT = 10 * 10000000; // 超时时间
 	private static final String CHARSET = "utf-8"; // 设置编码
-	private static List<SpinnerItem> list_itemItems = null;
-
-	public static List<String> parseJsonfromServer(String jsonString) {
-		List<String> list = new ArrayList<String>();
-		SpinnerItem spinner_Item = null;
-		if(jsonString!=null && jsonString.length()>0){
-			try {
-				JSONObject jsonMap = new JSONObject(jsonString);
-				Iterator<String> iterator = jsonMap.keys();
-				while (iterator.hasNext()) {
-					spinner_Item = new SpinnerItem();
-					String name = iterator.next();
-					String value = (String) jsonMap.get(name);
-
-					spinner_Item.setName(name);
-					spinner_Item.setValue(value);
-					list.add(value);
-					
-					list_itemItems.add(spinner_Item);
-				}
-			} catch (JSONException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return list;
-	}
-	
-	public String findNameByValue(String value){
-		return "";
-	}
 
 	/**
 	 * 
 	 * Function：发送json数据到指定的URL author：lionel
-	 * 
 	 * @param json
 	 * @param RequestURL
 	 */
-	public static void sendJson2Server(JSONObject json, String RequestURL) {
+	public static String sendJson2Server(JSONObject json, String RequestURL) {
+		String result = "";
 		try {
 			URL url = new URL(RequestURL);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -80,7 +40,8 @@ public class JsonUtil {
 			conn.setRequestMethod("POST"); // 请求方式
 			conn.setRequestProperty("Charset", CHARSET); // 设置编码
 			conn.setRequestProperty("connection", "keep-alive");
-			conn.setRequestProperty("Content-Type", "application/json");
+			conn.setRequestProperty("Content-Type",
+					"text/xml");
 
 			if (json != null) {
 				System.out.println(json);
@@ -88,17 +49,23 @@ public class JsonUtil {
 				DataOutputStream dos = new DataOutputStream(os);
 				// 把JSON数据转换成String类型使用输出流向服务器写
 				String content = String.valueOf(json);
+
 				dos.write(content.getBytes());
 				dos.flush();
 				dos.close();
 
-				String result = JsonUtil.recJsonfromServer(conn
+				result = HttpUtil.recJsonfromServer(conn
 						.getInputStream());
 				System.out.println(result);
+			}else{
+				conn.connect();
+				result = HttpUtil.recJsonfromServer(conn
+						.getInputStream());
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+		return result;
 	}
 
 	/**
