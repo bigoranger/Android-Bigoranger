@@ -55,6 +55,7 @@ public class CategoryAdapter extends BaseAdapter {
 			tv = new TextView(context);
 		}
 		Category category = categories.get(position);
+		tv.setId(Integer.parseInt(category.getId()));
 		tv.setText(category.getTitle());
 		return tv;
 	}

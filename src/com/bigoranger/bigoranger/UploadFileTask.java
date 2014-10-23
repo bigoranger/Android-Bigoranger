@@ -74,11 +74,12 @@ public class UploadFileTask extends AsyncTask<String, Void, String> {
 	protected void onPostExecute(String result) {
 		// 返回HTML页面的内容
 		pdialog.dismiss();
-		if (UploadUtils.SUCCESS.equalsIgnoreCase(result)) {
-			Toast.makeText(context, "上传成功!", Toast.LENGTH_LONG).show();
-		} else {
-			Toast.makeText(context, "上传失败!", Toast.LENGTH_LONG).show();
-		}
+		Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+//		if (UploadUtils.SUCCESS.equalsIgnoreCase(result)) {
+//			Toast.makeText(context, "上传成功!", Toast.LENGTH_LONG).show();
+//		} else {
+//			Toast.makeText(context, "上传失败!", Toast.LENGTH_LONG).show();
+//		}
 	}
 
 	@Override

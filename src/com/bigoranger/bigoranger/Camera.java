@@ -31,7 +31,7 @@ public class Camera {
 		}
 
 		ByteArrayInputStream isBm = new ByteArrayInputStream(baos.toByteArray());// 把压缩后的数据baos存放到ByteArrayInputStream中
-
+        
 		// 把ByteArrayInputStream数据生成图片,
 		// 注意：以bitmap形式存在时，图片又会变大！！！！ 所以上传采取用流的形式
 		Bitmap newBitmap = BitmapFactory.decodeStream(isBm, null, null);

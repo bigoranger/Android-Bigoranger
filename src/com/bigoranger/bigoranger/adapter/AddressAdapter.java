@@ -55,6 +55,7 @@ public class AddressAdapter extends BaseAdapter {
 			tv = new TextView(context);
 		}
 		Address address = addresss.get(position);
+		tv.setId(Integer.parseInt(address.getId()));
 		tv.setText(address.getContacts() + "   " + address.getTel());
 		return tv;
 	}

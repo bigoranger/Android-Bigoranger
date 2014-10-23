@@ -55,6 +55,7 @@ public class ServiceAdapter extends BaseAdapter {
 		}else{
 			chk = new CheckBox(context);
 			Service service = services.get(position);
+			chk.setId(Integer.parseInt(service.getId()));
 			chk.setText(service.getTitle());
 		}
 		return chk;

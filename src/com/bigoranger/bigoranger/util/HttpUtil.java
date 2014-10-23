@@ -26,12 +26,14 @@ public class HttpUtil {
 	 * Function：发送json数据到指定的URL author：lionel
 	 * @param json
 	 * @param RequestURL
+	 * @return 服务端返回的json字符串
 	 */
 	public static String sendJson2Server(JSONObject json, String RequestURL) {
 		String result = "";
+		HttpURLConnection conn = null;
 		try {
 			URL url = new URL(RequestURL);
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn = (HttpURLConnection) url.openConnection();
 			conn.setReadTimeout(TIME_OUT);
 			conn.setConnectTimeout(TIME_OUT);
 			conn.setDoInput(true); // 允许输入流
@@ -54,16 +56,18 @@ public class HttpUtil {
 				dos.flush();
 				dos.close();
 
-				result = HttpUtil.recJsonfromServer(conn
-						.getInputStream());
+				result = HttpUtil.recJsonfromServer(conn.getInputStream());
 				System.out.println(result);
 			}else{
-				conn.connect();
 				result = HttpUtil.recJsonfromServer(conn
 						.getInputStream());
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
+		}finally{
+			if(conn!=null){
+				conn.disconnect();
+			}
 		}
 		return result;
 	}

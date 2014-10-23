@@ -6,18 +6,21 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.bigoranger.bigoranger.adapter.AddressAdapter;
 import com.bigoranger.bigoranger.adapter.CategoryAdapter;
-import com.bigoranger.bigoranger.adapter.ServiceAdapter;
 import com.bigoranger.bigoranger.domain.Address;
 import com.bigoranger.bigoranger.domain.Category;
 import com.bigoranger.bigoranger.domain.Service;
+import com.bigoranger.bigoranger.domain.URLs;
 import com.bigoranger.bigoranger.util.HttpUtil;
 import com.bigoranger.bigoranger.util.JsonForResult;
 import com.bigoranger.bigoranger.util.JsonUtil;
@@ -41,6 +44,7 @@ import android.os.Message;
 import android.provider.MediaStore;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
@@ -49,44 +53,43 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+@SuppressLint("UseSparseArrays")
 public class PublishGoodsActivity extends Activity implements OnClickListener {
-	/******************************************************************************/
-	private static String SERVER_URL = "http://10.200.10.90:88/Orange";
-	private static String ADD_URL = "/Api/Goods/add";
-	private static String GET_CATEGORY_URL = "/Api/Goods/getcategory";
-	private static String UPLOAD_URL = "/Api/Goods/upload?userid=0&goodsid=0";
-	private static String DELIMG_URL = "/Api/Goods/delimg";
-	private static String SAVE_URL = "/Api/Goods/save";
-
 	private static final int TAKE_PHOTO = 1;
 	private static final int SELECT_IMAGE = 2;
-
-	/******************************************************************************/
-
+	
 	private static final String IMAGE = "BigOranger" + File.separator + "Image";
 	private String picPath = ""; // 图片路径
 	public static String name; // 文件名称
 	public static String sdcardRoot = Environment.getExternalStorageDirectory()
 			.getAbsolutePath() + File.separator;; // sd卡根路径
-	private static String fileName = ""; // 文件绝对路径
+	private String fileName = ""; // 文件绝对路径
 	private File file; // 文件
 	private Uri u; // 从相册获取图片的uri
+	
+	private int imageCount = 0;	//图片数量
+	
 	private static DisplayMetrics metrics; // 手机屏幕分辨率
 	ContentResolver cr;
 
 	public List<String> list = new ArrayList<String>();// 用于存放图片的集合
 	private int index;
-	private com.bigoranger.bigoranger.MyGridView myGirdView,
-			service_MyGridView; // 网格
+	HashMap<Integer, String> chkMap = new HashMap<Integer, String>();
+	private com.bigoranger.bigoranger.MyGridView myGirdView; // 网格
+	
 	private Button takePhoto, selectImage, saveBtn, backBtn;
-	private EditText title, price, costPrice, presentation;
+	private EditText titleEdit, priceEdit, costPriceEdit, presentationEdit;
 	private Spinner category_Spinner, address_Spinner, tradeWay_Spinner;
+	private LinearLayout service_Linearlayout;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -94,11 +97,13 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 		super.setContentView(R.layout.uploadpic);
 		init();
-
+		
 		selectImage.setOnClickListener(this);
 		takePhoto.setOnClickListener(this);
 		myGirdView.setOnItemClickListener(new OnItemClickListenerImpl());
-		title.setOnFocusChangeListener(new OnFocusChangeListenerImpl());
+		titleEdit.setOnFocusChangeListener(new OnFocusChangeListenerImpl());
+		saveBtn.setOnClickListener(this);
+		backBtn.setOnClickListener(this);
 
 		/********************************************************************************/
 		// 在指定位置创建用于存放图片文件的文件夹
@@ -112,6 +117,11 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		/*********************************************************************************/
 	}
 
+	/**
+	 * 
+	 * Function：用户点击添加商品页面初始化
+	 * author：lionel
+	 */
 	@SuppressLint("HandlerLeak")
 	private void init() {
 		setContentView(R.layout.uploadpic);
@@ -120,21 +130,23 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		saveBtn = (Button) findViewById(R.id.saveBtn);
 		backBtn = (Button) findViewById(R.id.backBtn);
 
-		title = (EditText) findViewById(R.id.title);
-		price = (EditText) findViewById(R.id.price);
-		costPrice = (EditText) findViewById(R.id.costPrice);
-		presentation = (EditText) findViewById(R.id.presentation);
+		titleEdit = (EditText) findViewById(R.id.title);
+		priceEdit = (EditText) findViewById(R.id.price);
+		costPriceEdit = (EditText) findViewById(R.id.costPrice);
+		presentationEdit = (EditText) findViewById(R.id.presentation);
 
 		category_Spinner = (Spinner) findViewById(R.id.category);
 		address_Spinner = (Spinner) findViewById(R.id.address);
 		tradeWay_Spinner = (Spinner) findViewById(R.id.tradeWay);
 		myGirdView = (MyGridView) findViewById(R.id.myGridView);
-		service_MyGridView = (MyGridView) findViewById(R.id.service);
-
+		service_Linearlayout = (LinearLayout) findViewById(R.id.service_Linerlayout);
+		
 		String[] tItems = getResources().getStringArray(R.array.TradeWay);
 		ArrayAdapter<String> tradAdapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_spinner_item, tItems);
 		tradeWay_Spinner.setAdapter(tradAdapter);
+		
+		
 		final Handler handler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
@@ -149,20 +161,35 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 						PublishGoodsActivity.this);
 				AddressAdapter addrAdapter = new AddressAdapter(addresses,
 						PublishGoodsActivity.this);
-				ServiceAdapter servAdapter = new ServiceAdapter(services,
-						PublishGoodsActivity.this);
 
 				category_Spinner.setAdapter(cateAdapter);
 				address_Spinner.setAdapter(addrAdapter);
-				service_MyGridView.setAdapter(servAdapter);
+				
+				Iterator<Service> iterator = services.iterator();
+				
+				while(iterator.hasNext()){
+					Service service = iterator.next();
+					CheckBox chk = new CheckBox(PublishGoodsActivity.this);
+					chk.setId(Integer.parseInt(service.getId()));
+					chk.setText(service.getTitle());
+					service_Linearlayout.addView(chk);
+					chk.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+						
+						@Override
+						public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+							if(isChecked){
+								chkMap.put(buttonView.getId(), (String) buttonView.getText());
+							}
+						}
+					});	
+				}
 			}
 		};
 		
 		Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				String jsonString = HttpUtil.sendJson2Server(null, SERVER_URL
-						+ ADD_URL);
+				String jsonString = HttpUtil.sendJson2Server(null, URLs.ADD_GOODS_URL);
 				Message msg = Message.obtain();
 				msg.obj = jsonString;
 				handler.sendMessage(msg);
@@ -172,6 +199,9 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 	}
 
+	/**
+	 * Function：事件监听处理
+	 */
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
@@ -181,20 +211,93 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		case R.id.takePhoto:
 			takePhoto();
 			break;
+		case R.id.saveBtn:
+			saveGoods();
+			break;
+		case R.id.backBtn:
+			break;
 		default:
 			break;
 		}
 
 	}
+	
+	/**
+	 * 
+	 * Function：添加商品保存信息
+	 * author：lionel
+	 */
+	private void saveGoods(){
+		
+		String title = titleEdit.getText().toString().trim();
+		String price = priceEdit.getText().toString().trim();
+		String costPrice = costPriceEdit.getText().toString().trim();
+		String presentation = presentationEdit.getText().toString().trim();
+		int categoryId = category_Spinner.getSelectedView().getId();
+		int addressId = address_Spinner.getSelectedView().getId();
+		int tradeWayId = (int) tradeWay_Spinner.getSelectedItemId()+1;
+		StringBuilder sb = new StringBuilder();
+		Set<Integer> chkIds = chkMap.keySet();
+		Iterator<Integer> iterator = chkIds.iterator();
+		while(iterator.hasNext()){
+			sb.append(iterator.next());
+			if(iterator.hasNext()){
+				sb.append("|");
+			}
+		}
+		String serviceId = sb.toString();
+		int goodsid = JsonUtil.goodsid;
+		try {
+			final JSONObject saveJson = new JSONObject();
+			saveJson.put("imgcount", imageCount);
+			saveJson.put("GoodsId", goodsid);
+			saveJson.put("Title", title);
+			saveJson.put("Price", price);
+			saveJson.put("CostPrice", costPrice);
+			saveJson.put("Presentation", presentation);
+			saveJson.put("CategoryId", categoryId);
+			saveJson.put("AddressId", addressId);
+			saveJson.put("TradeWay", tradeWayId);
+			saveJson.put("Server", serviceId);
+			
+			final Handler saveHandler = new Handler(){
+				@Override
+				public void handleMessage(Message msg) {
+					String jsonString = (String) msg.obj;
+					String result = JsonUtil.parseJsonAddGoods(jsonString);
+					Toast.makeText(PublishGoodsActivity.this, result, Toast.LENGTH_SHORT).show();
+				}
+			};
+			
+			new Thread(new Runnable(){
 
+				@Override
+				public void run() {
+					String jsonString = HttpUtil.sendJson2Server(saveJson, URLs.SAVE_GOODS_INFO_URL);
+					Message msg = Message.obtain();
+					msg.obj = jsonString;
+					saveHandler.sendMessage(msg);
+				}
+				
+			}).start();
+			
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
 	/**
 	 * 
 	 * Function：图片和普通上传 author：lionel
 	 */
-	private void picUpload() {
+	private void picUpload(String userId, int goodsId) {
 		if ((picPath != null && picPath.length() > 0)) {
-			UploadFileTask uploadFileTask = new UploadFileTask(this, SERVER_URL
-					+ UPLOAD_URL);
+			String userid = userId;
+			int goodsid = goodsId;
+			String param = "?userid="+userid+"&goodsid="+goodsid;
+			UploadFileTask uploadFileTask = new UploadFileTask(this, URLs.IMAGE_UPLOAD_URL + param);
+			Log.e("http",URLs.IMAGE_UPLOAD_URL + param);
 			uploadFileTask.execute(picPath);
 		}
 	}
@@ -220,6 +323,8 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 			picPath = file.getPath();
+			fileName=picPath;
+			Log.v("fileName", fileName);
 			startActivityForResult(intent, TAKE_PHOTO);
 		} else {
 			new AlertDialog.Builder(PublishGoodsActivity.this)
@@ -254,17 +359,20 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == TAKE_PHOTO) {
 			if (resultCode == Activity.RESULT_OK) {
-
-				String str = fileName.substring(
-						fileName.lastIndexOf(File.separator) + 1,
-						fileName.lastIndexOf("."));
-				String newName = str + "_mini";
+				Log.v("拍照fgdgd", "拍照");
+				String str = null;
+	             if(!"".equals(fileName)){
+	            	 str = fileName.substring(
+	 						fileName.lastIndexOf("/") + 1, fileName.lastIndexOf("."));
+	             }
+				String newName = str+"mini";				
 				try {
+					 Log.v("sdfs", "eeee");
 					// 以字节流的形式压缩，以便上传到服务器！！
 					saveCompressPic(fileName, newName);
-
 					initImageAdapter(newName);// 初始化图片适配器
-
+					picPath = fileName;
+					Log.e("picPath",picPath);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -285,10 +393,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 								.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
 						cursor.moveToFirst();
 						String path = cursor.getString(colunm_index);
-						/***
-						 * 这里加这样一个判断主要是为了第三方的软件选择，比如：使用第三方的文件管理器的话，
-						 * 你选择的文件就不一定是图片了，这样的话，我们判断文件的后缀名 如果是图片格式的话，那么才可以
-						 */
+						
 						if (path.endsWith("jpg") || path.endsWith("png")
 								|| path.endsWith("jpeg")) {
 							picPath = path;
@@ -299,7 +404,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 							// 以字节流的形式压缩，以便上传到服务器！！
 							saveCompressPic("", newName);
 							initImageAdapter(newName);// 初始化图片适配器
-
 							String toPath = sdcardRoot + IMAGE + File.separator;
 							copyFile(picPath, toPath, str + ".jpg");// 将选择的图片复制到指定路径下
 
@@ -316,7 +420,8 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			}
 		}
 		super.onActivityResult(requestCode, resultCode, data);
-		picUpload();
+		imageCount++;
+		picUpload(JsonUtil.userid,JsonUtil.goodsid);
 	}
 
 	/**
@@ -400,14 +505,14 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	 * @throws Exception
 	 */
 	private void saveCompressPic(String path, String newName) throws Exception {
-
+		
 		File file_02 = new File(sdcardRoot + IMAGE + File.separator, newName
 				+ ".jpg");
 		FileOutputStream out = new FileOutputStream(file_02);
 
 		Bitmap oldBitmap;
 		// 调用方法，获取压缩图片
-		if (!"".equals(path)) {
+		if (path!=null||!"".equals(path)) {
 			oldBitmap = BitmapFactory.decodeFile(path);// 调用拍照得到的图片
 			// 获取图片的旋转角度，有些系统把拍照的图片旋转了，有的没有旋转
 			int degree = Camera.readPictureDegree(path);
@@ -477,9 +582,9 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 		@SuppressLint("HandlerLeak")
 		@Override
 		public void onFocusChange(View v, boolean hasFocus) {
-			if (v.getId() == title.getId()) {
+			if (v.getId() == titleEdit.getId()) {
 				if (!hasFocus) {
-					String text = title.getText().toString().trim();
+					String text = titleEdit.getText().toString().trim();
 
 					if (text != null && text.length() > 0) {
 						Map<String,String> map = new HashMap<String, String>();
@@ -491,7 +596,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 								String jsonString = (String) msg.obj;
 								List<Category> categories = JsonUtil.parseJsonGetCategory(jsonString);
 								category_Spinner.setAdapter(null);
-								
 								CategoryAdapter new_CateAdapter = new CategoryAdapter(categories, PublishGoodsActivity.this);
 								category_Spinner.setAdapter(new_CateAdapter);
 							}
@@ -501,7 +605,7 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 							@Override
 							public void run() {
 								String json = HttpUtil.sendJson2Server(jsonObject,
-										SERVER_URL + GET_CATEGORY_URL);
+										URLs.GET_CATEGORY_URL);
 								Message msg = Message.obtain();
 								msg.obj = json;
 								getCate_handler.sendMessage(msg);

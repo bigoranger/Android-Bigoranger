@@ -4,7 +4,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -12,6 +11,7 @@ import java.net.URL;
 import java.util.UUID;
 
 
+import android.os.StrictMode;
 import android.util.Log;
 
 /**
@@ -27,7 +27,7 @@ import android.util.Log;
  * @version 1.0
  */
 public class UploadUtils {
-	private static final String TAG = "uploadFile";
+	private static final String TAG = "uploadImg";
 	private static final int TIME_OUT = 10 * 10000000; // 超时时间
 	private static final String CHARSET = "utf-8"; // 设置编码
 	public static final String SUCCESS = "1";
@@ -43,81 +43,90 @@ public class UploadUtils {
 	 * @return 返回响应的内容
 	 */
 	public static String uploadFile(File file, String RequestURL) {
-		String BOUNDARY = UUID.randomUUID().toString(); // 边界标识 随机生成
+		Log.v("filepaht", file.getPath());
+		String BOUNDARY = "*****"; // 边界标识
 		String PREFIX = "--", LINE_END = "\r\n";
 		String CONTENT_TYPE = "multipart/form-data"; // 内容类型
+		String result = null;
 
 		try {
 			Log.e("URL",RequestURL);
 			URL url = new URL(RequestURL);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setReadTimeout(TIME_OUT);
+			
 			conn.setConnectTimeout(TIME_OUT);
 			conn.setDoInput(true); // 允许输入流
 			conn.setDoOutput(true); // 允许输出流
 			conn.setUseCaches(false); // 不允许使用缓存
 			conn.setRequestMethod("POST"); // 请求方式
+			
+			/**
+			 * 设置请求属性
+			 */
 			conn.setRequestProperty("Charset", CHARSET); // 设置编码
-			// 设置User-Agent: Fiddler
-			conn.setRequestProperty("ser-Agent", "Fiddler");
-			conn.setRequestProperty("connection", "keep-alive");
+			conn.setRequestProperty("Connection", "Keep-Alive");
 			conn.setRequestProperty("Content-Type", CONTENT_TYPE + ";boundary="
 					+ BOUNDARY);
 
 			if (file != null) {
-				/**
-				 * 当文件不为空，把文件包装并且上传
-				 */
-				OutputStream outputSteam = conn.getOutputStream();
+				 /*设置StrictMode 否则HTTPURLConnection连接失败，因为这是在主进程中进行网络连接*/
+				 StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog().build());
+				
+				 OutputStream outputSteam = conn.getOutputStream();
 
 				DataOutputStream dos = new DataOutputStream(outputSteam);
 				StringBuffer sb = new StringBuffer();
 				sb.append(PREFIX);
 				sb.append(BOUNDARY);
 				sb.append(LINE_END);
+				
 				/**
-				 * 这里重点注意： name里面的值为服务器端需要key 只有这个key 才可以得到对应的文件
-				 * filename是文件的名字，包含后缀名的 比如:abc.png
+				 * 设置图片请求参数信息
 				 */
-
-				sb.append("Content-Disposition: form-data; name=\"img\"; filename=\""
-						+ file.getName() + "\"" + LINE_END);
+				sb.append("Content-Disposition: form-data; name=\"Filedata\"; fileName=\"" + file.getName() + "\"" + LINE_END);
 				sb.append("Content-Type: application/octet-stream; charset="
 						+ CHARSET + LINE_END);
 				sb.append(LINE_END);
 				dos.write(sb.toString().getBytes());
-				InputStream is = new FileInputStream(file);
-				byte[] bytes = new byte[1024];
+								
+				FileInputStream is = new FileInputStream(file);
+				/**
+				 * 采用缓冲区读取文件数据，一次读取8k
+				 */
+				byte[] bytes = new byte[8192];
 				int len = 0;
 				while ((len = is.read(bytes)) != -1) {
+					/* 数据写入DataOutputStream中 */
 					dos.write(bytes, 0, len);
-				}
-				is.close();
+				}					
 				dos.write(LINE_END.getBytes());
 				byte[] end_data = (PREFIX + BOUNDARY + PREFIX + LINE_END)
 						.getBytes();
 				dos.write(end_data);
+				/* 关闭流，写入的东西自动生成Http正文*/
+				is.close();
 				dos.flush();
+				dos.close();
 			}
-			
-			
+						
 			int res = conn.getResponseCode();
-			String result = HttpUtil.recJsonfromServer(conn.getInputStream());
-			
-			
 			Log.e(TAG, "response code:" + res);
+			String jsonString = HttpUtil.recJsonfromServer(conn.getInputStream());
+            Log.v("jsonString", jsonString);
+			result = JsonUtil.parseJsonImageUpload(jsonString);	
 			/**
 			 * 获取响应码 200=成功 当响应成功，获取响应的流
 			 */
-			if (res == 200) {
-				return SUCCESS;
-			}
+//			if (res == 200) {
+//				return SUCCESS;
+//			}
 			
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return FAILURE;
+//		return FAILURE;
+		return result;
 	}
 }
