@@ -324,7 +324,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 			picPath = file.getPath();
 			fileName=picPath;
-			Log.v("fileName", fileName);
 			startActivityForResult(intent, TAKE_PHOTO);
 		} else {
 			new AlertDialog.Builder(PublishGoodsActivity.this)
@@ -359,7 +358,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == TAKE_PHOTO) {
 			if (resultCode == Activity.RESULT_OK) {
-				Log.v("拍照fgdgd", "拍照");
 				String str = null;
 	             if(!"".equals(fileName)){
 	            	 str = fileName.substring(
@@ -367,7 +365,6 @@ public class PublishGoodsActivity extends Activity implements OnClickListener {
 	             }
 				String newName = str+"mini";				
 				try {
-					 Log.v("sdfs", "eeee");
 					// 以字节流的形式压缩，以便上传到服务器！！
 					saveCompressPic(fileName, newName);
 					initImageAdapter(newName);// 初始化图片适配器
