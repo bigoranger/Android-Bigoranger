@@ -1,4 +1,4 @@
-package com.bigoranger.bigoranger;
+package com.bigoranger.bigoranger.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;

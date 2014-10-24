@@ -4,6 +4,7 @@
 package com.bigoranger.bigoranger.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -38,7 +39,25 @@ public class JsonUtil {
 			}
 		}
 		return "未接收服务器数据！";
-		
+	}
+	
+	/**
+	 * 
+	 * Function：删除图片
+	 * author：lionel
+	 * @param jsonString 传入json字符串参数
+	 * @return 包含了状态和信息的json字符串的JSONObject类对象
+	 */
+	public static JSONObject parseJsonDelImg(String jsonString){
+		JSONObject jsonObject = null;
+		try {
+			jsonObject = new JSONObject(jsonString);
+			return jsonObject;
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return jsonObject;
 	}
 	
 	/**
